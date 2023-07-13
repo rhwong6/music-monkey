@@ -14,22 +14,26 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 // Uses a collection to store commands
 client.commands = new Collection();
 
-// Stores the path to the commands directory, and returns an array of all file names ending with js
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('js'));
+// Stores the path of folders containing commands
+const foldersPath = path.join(__dirname, 'commands');
+const commandFolders = fs.readdirSync(foldersPath);
 
-// Loops over all command files, dynamically setting each command into the client.commands Collection
-for (const file of commandFiles) {
-	const filePath = path.join(commandsPath, file);
-	const command = require(filePath);
-
-	// Checks if it has data and execute properties, if it does, set a new item in the Collection with the key as the command name and value as the exported module
-	if ('data' in command && 'execute' in command) {
-		client.commands.set(command.data.name, command);
-	} else {
-		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+// For each folder, loop through command files, and dynamically sets each command into the client.commands Collection
+for (const folder of commandFolders) {
+	const commandsPath = path.join(foldersPath, folder);
+	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+	for (const file of commandFiles) {
+		const filePath = path.join(commandsPath, file);
+		const command = require(filePath);
+		// Checks if it has data and execute properties, if it does, set a new item in the Collection with the key as the command name and value as the exported module
+		if ('data' in command && 'execute' in command) {
+			client.commands.set(command.data.name, command);
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
 	}
 }
+
 
 // Logs in console when client is ready
 client.once(Events.ClientReady, c => {
