@@ -34,40 +34,20 @@ for (const folder of commandFolders) {
 	}
 }
 
+// Stores the path of files containing events
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
-// Logs in console when client is ready
-client.once(Events.ClientReady, c => {
-    console.log('Music monkey is ready!');
-});
-
-// Listener for interactions
-client.on(Events.InteractionCreate, async interaction => {
-	// If the interaction is not a chat command
-	if (!interaction.isChatInputCommand()) {
-		return;
+// For each event file, load each event
+for (const file of eventFiles) {
+	const filePath = path.join(eventsPath, file);
+	const event = require(filePath);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
 	}
-
-	// Stores the matching command from the interaction
-	const command = interaction.client.commands.get(interaction.commandName);
-	
-	// If command is not found, return error
-	if (!command) {
-		console.error(`No command matching ${interaction.commandName} was found.`);
-		return;
-	}
-
-	// Tries to executes the command or responds with an error
-	try {
-		await command.execute(interaction);
-	} catch (error) {
-		console.error(error);
-		if (interaction.replied || interaction.deferred) {
-			await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
-		} else {
-			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
-		}
-	}
-});
+}
 
 
 
