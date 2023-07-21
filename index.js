@@ -14,6 +14,9 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 // Uses a collection to store commands
 client.commands = new Collection();
 
+// Uses a collection to store cooldowns
+client.cooldowns = new Collection();
+
 // Stores the path of folders containing commands
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -48,8 +51,6 @@ for (const file of eventFiles) {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
-
-
 
 // Logs into discord with clients token
 client.login(TOKEN);
