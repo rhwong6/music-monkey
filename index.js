@@ -9,7 +9,7 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 
 // Creates new instance of Client
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
 
 // Uses a collection to store commands
 client.commands = new Collection();

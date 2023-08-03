@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ChannelType } = require("discord.js");
-const { joinVoiceChannel, AudioPlayer, VoiceConnectionStatus, NoSubscriberBehavior, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const { joinVoiceChannel, AudioPlayer, VoiceConnectionStatus, NoSubscriberBehavior, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const wait = require('node:timers/promises').setTimeout;
 const fs = require('node:fs');
 const path = require('node:path')
@@ -50,15 +50,24 @@ module.exports = {
         });
         */
 
+        audioPlayer.on(AudioPlayerStatus.Playing, () => {
+            console.log('Audio player is playing music');
+        });
+
+        audioPlayer.on('error', error => {
+            console.log('Error: ' + error.message);
+        });
+
         await interaction.reply('Joining channel: ' + channel.name);
 
         connection.subscribe(audioPlayer);
 
+        /*
         await wait(2000);
-        
         connection.destroy();
         await interaction.followUp('Disconnecting connection');
+        */
 
-        audioPlayer.stop();
+        //audioPlayer.stop();
 	},
 };
