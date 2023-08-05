@@ -4,6 +4,8 @@ const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { Player } = require('discord-player');
+
 dotenv.config();
 
 const TOKEN = process.env.TOKEN;
@@ -51,6 +53,12 @@ for (const file of eventFiles) {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
+
+// Create new Player
+const player = new Player(client);
+
+// Loads all extractor from @discord-player/extractor package
+player.extractors.loadDefault();
 
 // Logs into discord with clients token
 client.login(TOKEN);
