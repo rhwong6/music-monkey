@@ -49,7 +49,13 @@ module.exports = {
 
         // Tries to executes the command or responds with an error
         try {
-            await command.execute(interaction);
+            if (command.category === "music") {
+                const { useQueue } = require("discord-player");
+                const queue = useQueue(interaction.guild.id);
+                await command.execute(interaction, queue);
+            } else {
+                await command.execute(interaction);
+            }
         } catch (error) {
             console.error(error);
             if (interaction.replied || interaction.deferred) {
