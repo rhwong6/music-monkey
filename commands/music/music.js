@@ -1,7 +1,6 @@
-const { SlashCommandBuilder, ActionRowBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const { useQueue, useMainPlayer } = require('discord-player');
-const { previousButton, playButton, pauseButton, stopButton,
-        skipButton, clearButton, volumeDown, volumeUp } = require('../../button-gui');
+const { commandResponse } = require('../../utility/interaction-response');
 
 /*
 const testEmbed = new EmbedBuilder()
@@ -31,8 +30,8 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('play')
-                .setDescription('Plays music using a Youtube link, or resumes music that is paused')
-                .addStringOption(option => option.setName('link').setDescription('The Youtube link to play')))
+                .setDescription('Plays music using a Youtube link/song name, or resumes music that is paused')
+                .addStringOption(option => option.setName('song').setDescription('The Youtube link/song name to play')))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('pause')
@@ -46,8 +45,8 @@ module.exports = {
                 .setName('stop')
                 .setDescription('Stops playing music')),
     async execute(interaction, queue) {
+        await interaction.deferReply();
         if (interaction.options.getSubcommand() === 'play') {
-            //await interaction.deferReply();
             
             if (interaction.options.getString('link') !== null) {
                 const link = interaction.options.getString('link');
@@ -68,8 +67,6 @@ module.exports = {
                         queue.node.skip();
                     }
 
-                    await interaction.editReply('Playing: ' + track.title);
-
 
                 } catch (e) {
                     await interaction.editReply(`Something went wrong: ${e}`);
@@ -77,20 +74,20 @@ module.exports = {
 
             } else {
                 queue.node.resume();
-                await interaction.editReply('Resuming song!');
+                //await interaction.editReply('Resuming song!');
             }
         }
         else if (interaction.options.getSubcommand() === 'pause') {
             queue.node.pause();
-            await interaction.reply('Pauses current song!');
+            //await interaction.reply('Pauses current song!');
         }
         else if (interaction.options.getSubcommand() === 'skip') {
             queue.node.skip();
-            await interaction.reply('Current song skipped!');
+            //await interaction.reply('Current song skipped!');
         }
         else if (interaction.options.getSubcommand() === 'stop') {
             queue.delete();
-            await interaction.reply('Stops playing music');
+            //await interaction.reply('Stops playing music');
         }
     },
 };

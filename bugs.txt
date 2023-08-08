@@ -1,0 +1,3 @@
+•Need to specify reason for not playing music when user using command is not in a channel
+•When music stopped when paused, only playerfinish event fires, when bot disconnected by admin, only disconnect event fires
+ therefore need to go disabled button state when both events fire
