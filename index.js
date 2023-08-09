@@ -40,7 +40,7 @@ for (const folder of commandFolders) {
 }
 
 // Stores the path of files containing events
-const eventsPath = path.join(__dirname, 'events');
+const eventsPath = path.join(__dirname, 'events/discord');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
 // For each event file, load each event
@@ -59,6 +59,20 @@ const player = new Player(client);
 
 // Loads all extractor from @discord-player/extractor package
 player.extractors.loadDefault();
+
+const playerEventsPath = path.join(__dirname, 'events/player');
+const playerEventFiles = fs.readdirSync(playerEventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of playerEventFiles) {
+	const filePath = path.join(playerEventsPath, file);
+	const event = require(filePath);
+	
+	player.events.on(event.name, () => {
+		console.log("EVENT: " + event.name + " HAS FIRED");
+		event.execute()
+	});
+}
+
 
 // Logs into discord with clients token
 client.login(TOKEN);

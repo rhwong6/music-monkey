@@ -1,7 +1,5 @@
-const { SlashCommandBuilder } = require("discord.js");
-const { useQueue, useMainPlayer } = require('discord-player');
-const { commandResponse } = require('../../utility/interaction-response');
-
+const { SlashCommandBuilder, ApplicationCommandOptionType } = require("discord.js");
+const { useQueue, useMainPlayer, useHistory } = require('discord-player');
 /*
 const testEmbed = new EmbedBuilder()
     .setColor(0x0099FF)
@@ -43,16 +41,29 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('stop')
-                .setDescription('Stops playing music')),
+                .setDescription('Stops playing music'))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('volume')
+                .setDescription('Sets volume of current player')
+                .addNumberOption(option => option.setName('amount').setDescription('Volume amount to set (1-100)').setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('back')
+                .setDescription('Plays previous song'))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('info')
+                .setDescription('Info on current song')),
     async execute(interaction, queue) {
-        await interaction.deferReply();
         if (interaction.options.getSubcommand() === 'play') {
-            
-            if (interaction.options.getString('link') !== null) {
-                const link = interaction.options.getString('link');
+            if (interaction.options.getString('song') !== null) {
+                const link = interaction.options.getString('song');
 
                 const player = useMainPlayer();
                 const channel = interaction.member.voice.channel;
+
+                await interaction.deferReply();
 
                 try {
                     const { track } = await player.play(channel, link, {
@@ -74,20 +85,45 @@ module.exports = {
 
             } else {
                 queue.node.resume();
-                //await interaction.editReply('Resuming song!');
+                await interaction.deferReply();
             }
         }
         else if (interaction.options.getSubcommand() === 'pause') {
             queue.node.pause();
-            //await interaction.reply('Pauses current song!');
+            await interaction.deferReply();
         }
         else if (interaction.options.getSubcommand() === 'skip') {
             queue.node.skip();
-            //await interaction.reply('Current song skipped!');
+            await interaction.deferReply();
+        } 
+        else if (interaction.options.getSubcommand() === 'back') {
+            const history = useHistory(interaction.guildId);
+
+            if (history.isEmpty()) {
+                await interaction.reply('History is empty');
+            } else {
+                await history.previous();
+                await interaction.reply('Playing previous song');
+            }
         }
         else if (interaction.options.getSubcommand() === 'stop') {
             queue.delete();
-            //await interaction.reply('Stops playing music');
+            await interaction.deferReply();
+        }
+        else if (interaction.options.getSubcommand() === 'volume') {
+            var volume = interaction.options.getNumber('amount');
+
+            if (volume > 100) {
+                volume = 100;
+            } else if (volume < 0) {
+                volume = 0;
+            }
+            
+            queue.node.setVolume(volume * 2);
+            await interaction.editReply('VOLUME SET TO: ' + volume);
+        }
+        else if (interaction.options.getSubcommand() === 'info') {
+            await interaction.editReply(queue.currentTrack.title);
         }
     },
 };

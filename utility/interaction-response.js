@@ -11,7 +11,7 @@ const commandResponse = async (interaction, message, thumbnail) => {
     .setTitle(message)
     .setAuthor({ name: interaction.member.displayName, iconURL: interaction.member.displayAvatarURL() })
     .setThumbnail(thumbnail)
-    .setDescription(`Message will be deleted within <t:${expiredTimestamp}:R>`);
+    .setDescription(`Message will be deleted <t:${expiredTimestamp}:R>`);
 
     interaction.editReply( {
         embeds: [testEmbed],
@@ -34,7 +34,7 @@ const buttonPressResponse = async (interaction, message, thumbnail) => {
     .setThumbnail(thumbnail)
     .setDescription(`Message will be deleted <t:${expiredTimestamp}:R>`);
     
-    interaction.reply( {
+    interaction.editReply( {
         embeds: [testEmbed],
         ephemeral: true
     });

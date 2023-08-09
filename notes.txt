@@ -1,0 +1,31 @@
+Useful GuildQueueEvents:
+•audioTrackAdd
+•audioTrackRemove
+•connectionDestroyed - when connection is destroyed
+•disconnect - when bot is disconnected from the channel
+•playerFinish - when audio finishes streaming audio track
+•playerPause - when audio player is paused
+•playerResume - when audio player is resumed
+•playerSkip - when player skips current track
+•queueDelete - when queue is deleted
+•volumeChange - when audio player volume changed
+
+•playerStart - when audio player starts streaming audio
+•playerTrigger - when audio player is triggered
+•queueCreate - when queue is succesfully created
+
+Maybe useful GuildQueueEvents:
+•audioTracksAdd (might be required for bot to work with added playlists)
+•audioTracksRemove
+•connection - when connection is created
+•emptyChannel - when channel is empty
+•emptyQueue - when queue is empty
+•error - when error is encountered
+•playerError - when audio player has an error while streaming audio
+
+skip = playerSkip (cannot use as its when the player skips a song not the user)
+stop = need to test
+queue add = audioTrackAdd
+queue remove = not implemented yet
+queue clear = queueDelete???
+volume = volumeChange

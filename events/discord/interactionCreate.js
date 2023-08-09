@@ -2,17 +2,21 @@ const { Events, Collection, ActionRowBuilder, EmbedBuilder, ComponentType, Inter
 const wait = require('node:timers/promises').setTimeout;
 const { useQueue, useMainPlayer, useHistory } = require('discord-player');
 const { previousButton, playButton, pauseButton, stopButton,
-    skipButton, clearButton, volumeDown, volumeUp } = require('../utility/button-gui');
-const { commandResponse, buttonPressResponse } = require('../utility/interaction-response');
+    skipButton, clearButton, volumeDown, volumeUp } = require('../../utility/button-gui');
+const { commandResponse, buttonPressResponse } = require('../../utility/interaction-response');
 
 var buttonCollector;
 var guiMessage;
+
+var currentInteraction;
 
 module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction) {
         // If the interaction is not a chat command
         if (interaction.isChatInputCommand()) {
+            currentInteraction = interaction;
+
             // Stores the matching command from the interaction
             const command = interaction.client.commands.get(interaction.commandName);
 
@@ -61,6 +65,10 @@ module.exports = {
                     const queue = useQueue(interaction.guild.id);
                     await command.execute(interaction, queue);
 
+                    if (interaction.commandName === 'music' && interaction.options.getSubcommand() === 'stop') {
+                        commandResponse(interaction, 'Music stopped', 'https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg');
+                    }
+
                     //
                     const currQueue = useQueue(interaction.guild.id);
                     
@@ -100,11 +108,13 @@ module.exports = {
                             } else if (action === 'music stop') {
                                 commandResponse(interaction, 'Music stopped', 'https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg');
                             } else if (action === 'queue add') {
-                                commandResponse(interaction, 'TODO', null);
+                                commandResponse(interaction, 'Added ' + currQueue.tracks.toArray()[currQueue.size - 1].title + ' to queue', 'https://images.news18.com/ibnlive/uploads/2023/01/untitled-design-24-10-16740223394x3.png');
                             } else if (action === 'queue remove') {
                                 commandResponse(interaction, 'TODO', null);
                             } else if (action === 'queue clear') {
-                                commandResponse(interaction, 'Queue cleared', 'https://live.staticflickr.co/3863612958_b191130bb4_b.');
+                                commandResponse(interaction, 'Queue cleared', 'https://live.staticflickr.com/2489/3863612958_b191130bb4_b.jpg');
+                            } else if (action === 'music volume') {
+                                commandResponse(interaction, 'Volume set to ' + currQueue.node.volume/2, null);
                             }
 
                             buttonCollector.stop();
@@ -114,35 +124,61 @@ module.exports = {
                         buttonCollector.on('collect', async i => {
                             if (i.customId === 'play') {
                                 currQueue.node.resume();
-                                updateGui(i, "pause", 'music resume', true);
+                                await i.deferReply();
+                                //updateGui(i, "pause", 'music resume', true);
                                 buttonPressResponse(i, 'Music resuming', 'https://cdn.pixabay.com/photo/2018/06/30/09/29/monkey-3507317_1280.jpg');
                             } else if (i.customId === 'pause') {
                                 currQueue.node.pause();
-                                updateGui(i, "play", 'music pause', true);
+                                await i.deferReply();
+                                //updateGui(i, "play", 'music pause', true);
                                 buttonPressResponse(i, 'Music paused', 'https://cdn.openart.ai/stable_diffusion/186063089c7f244b162ad0015b6e54f8ad311548_2000x2000.webp');
                             } else if (i.customId === 'stop') {
                                 currQueue.node.stop();
+                                await i.deferReply();
                                 updateGui(i, "play", 'music stop', true);
                                 buttonPressResponse(i, 'Music stopped', 'https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg');
                             } else if (i.customId === 'previous') {
-                                i.reply('TODO PREVIOUS');
+                                const history = useHistory(interaction.guildId);
+                                if (history.isEmpty()) {
+                                    await i.deferReply();
+                                    buttonPressResponse(i, 'No previous song', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY8tb0MddJY1oi1MZwOcmo_mzxtcgQPwL5aQ&usqp=CAU');
+                                } else {
+                                    history.previous();
+                                    await i.deferReply();
+                                    updateGui(i, "play", 'music back', true);
+                                    buttonPressResponse(i, 'Playing previous track: ' + history.currentTrack.title, null);
+                                }
                             } else if (i.customId === 'skip') {
                                 currQueue.node.skip();
-                                updateGui(i, "play", 'music skip', true);
+                                await i.deferReply();
+                                //updateGui(i, "play", 'music skip', true);
                                 buttonPressResponse(i, 'Track skipped', 'https://www.rd.com/wp-content/uploads/2020/12/GettyImages-78777891-scaled.jpg');
                             } else if (i.customId === 'clear') {
                                 currQueue.node.clear();
+                                await i.deferReply();
                                 updateGui(i, "play", 'queue clear', true);
                                 buttonPressResponse(i, 'Queue cleared', 'https://live.staticflickr.co/3863612958_b191130bb4_b.');
                             } else if (i.customId === 'volumeDown') {
-                                i.reply('TODO VOLUMEDOWN');
+                                currQueue.node.setVolume(currQueue.node.volume - 20);
+                                await i.deferReply();
+                                updateGui(i, "play", 'volume down', true);
+                                buttonPressResponse(i, 'Volume down to: ' + (currQueue.node.volume/2), 'https://static.angloinfo.com/blogs/files/sites/149/zich-een-aap-lachen.jpg');
                             } else if (i.customId === 'volumeUp') {
-                                i.reply('TODO VOLUMEUP');
+                                currQueue.node.setVolume(currQueue.node.volume + 20);
+                                await i.deferReply();
+                                updateGui(i, "play", 'volume up', true);
+                                buttonPressResponse(i, 'Volume up to: ' + (currQueue.node.volume/2), 'https://i.ytimg.com/vi/gvj5dmlc20I/hqdefault.jpg');
                             }
                         });
 
                         const player = useMainPlayer();
-                        
+
+
+                        player.events.on('playerSkip', async () => {
+                            console.log('SKIP EVENT HAS ACTIVATED');
+                        });
+
+                        /*
                         player.events.on('disconnect', async () => {
                             previousButton.setDisabled(true);
                             pauseButton.setDisabled(true);
@@ -162,10 +198,8 @@ module.exports = {
                                 components: [firstRowPlay, secondRow]
                             });
                         });
+                        */
 
-                        player.events.on('playerFinish', async () => {
-                            
-                        });
                     }
                     //
 
@@ -181,7 +215,9 @@ module.exports = {
                 }
             }
         }
-    }
+    },
+    updateGui,
+    currentInteraction
 }
 
 function createGui(interaction, currQueue, action, buttonEnabled) {
@@ -210,9 +246,11 @@ function createGui(interaction, currQueue, action, buttonEnabled) {
     } else if (action === 'music pause') {
         title = ' ' + interaction.user.globalName + ' paused - ' + currQueue.currentTrack.title + ' ';
     } else if (action === 'music skip') {
-        title = ' ' + interaction.user.globalName + ' skipped - ' + ' INSERT LAST SONG HERE' + ' ';
-        console.log(useHistory(interaction.guildId).size);
-    } else if (action === 'music stop') {
+        title = ' ' + interaction.user.globalName + ' skipped - ' + useHistory(interaction.guildId).currentTrack.title + ' ';
+    } else if (action === 'music back') {
+        title = ' ' + interaction.user.globalName + ' replaying - ' + currQueue.currentTrack.title + ' ';
+    }
+    else if (action === 'music stop') {
         title = ' ' + interaction.user.globalName + ' stopped the player' + ' ';
     } else if (action === 'queue add') {
         title = ' ' + interaction.user.globalName + ' added - ' + currQueue.tracks.toArray()[currQueue.size - 1].title + ' to the queue ';
@@ -220,6 +258,18 @@ function createGui(interaction, currQueue, action, buttonEnabled) {
         title = ' ' + interaction.user.globalName + ' added - ' + 'INSERT REMOVED SONG HERE' + ' ';
     } else if (action === 'queue clear') {
         title = ' ' + interaction.user.globalName + ' cleared the queue ';
+    } else if (action === 'music volume') {
+        title = ' ' + interaction.user.globalName + ' set the volume to ' + (currQueue.node.volume/2);
+    } else if (action === 'volume down') {
+        title = ' ' + interaction.user.globalName + ' lowered the volume to ' + (currQueue.node.volume/2);
+    } else if (action === 'volume up') {
+        title = ' ' + interaction.user.globalName + ' increased the volume to ' + (currQueue.node.volume/2);
+    } else if (action === 'player next track') {
+        if (currQueue.size < 1) {
+            title = ' Player finished ';
+        } else {
+            title = ' Now playing - ' + currQueue.currentTrack.title + ' ';
+        }
     }
 
     var spacing = '';
@@ -263,10 +313,9 @@ function createGui(interaction, currQueue, action, buttonEnabled) {
     return [trackEmbed, firstRowPlay, firstRowPause, secondRow];
 }
 
-function updateGui(interaction, mainButton, title, buttonEnabled) {
-    const currQueue = useQueue(interaction.guild.id);
-
-    var guiParts = createGui(interaction, currQueue, title, buttonEnabled);
+function updateGui(interaction, mainButton, action, buttonEnabled) {
+    const currQueue = useQueue(currentInteraction.guild.id);
+    var guiParts = createGui(currentInteraction, currQueue, action, buttonEnabled);
 
     var trackEmbed = guiParts[0];
     var firstRowPlay = guiParts[1];
