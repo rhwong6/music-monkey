@@ -1,8 +1,5 @@
-•Need to specify reason for not playing music when user using command is not in a channel
-•When music stopped when paused, only playerfinish event fires, when bot disconnected by admin, only disconnect event fires
- therefore need to go disabled button state when both events fire
 •Queue organisation messes up when a title long enough to create a new line is added (can fix by setting max characters of title with .. at the end)
-•Need to change pause/play icon to event based, tbh can make a lot of things events based
-•Back command displays wrong song in GUI
-•Command for stopping music does not edit a defer reply (half fixed with response but gui update can be fixed with event based gui update)
-•When player moves onto next track, gui is not updated
+•Queue clear
+•If user skips last track, does not display action
+•Commands shouldnt run when no player is active
+•History may be wrong

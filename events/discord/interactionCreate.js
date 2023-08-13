@@ -1,4 +1,4 @@
-const { Events, Collection, ActionRowBuilder, EmbedBuilder, ComponentType, InteractionCollector } = require('discord.js');
+const { Events, Collection, ActionRowBuilder, EmbedBuilder, ComponentType, Bold } = require('discord.js');
 const wait = require('node:timers/promises').setTimeout;
 const { useQueue, useMainPlayer, useHistory } = require('discord-player');
 const { previousButton, playButton, pauseButton, stopButton,
@@ -9,6 +9,16 @@ var buttonCollector;
 var guiMessage;
 
 var currentInteraction;
+
+var guiInit = false;
+var previousTitle;
+var previousActionFooter;
+var previousActionAvatar;
+
+var previousTrackNumText;
+var previousTrackTitles;
+
+var addedByArray = [];
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -75,6 +85,18 @@ module.exports = {
                     if (currQueue !== null) {
 
                         if (queue === null) {
+
+                            await interaction.editReply('Player started by: ' + interaction.user.globalName);
+
+                            previousButton.setDisabled(false);
+                            pauseButton.setDisabled(false);
+                            stopButton.setDisabled(false);
+                            skipButton.setDisabled(false);
+
+                            volumeDown.setDisabled(false);
+                            clearButton.setDisabled(false);
+                            volumeUp.setDisabled(false);
+
                             var guiParts = createGui(interaction, currQueue, "music play", true);
 
                             var trackEmbed = guiParts[0];
@@ -91,15 +113,17 @@ module.exports = {
                         else {
                             var action;
 
-                            if (interaction.options.getSubcommand() === 'play') {
+                            if (interaction.options.getSubcommand() === 'play' && interaction.options.getString('song') === null) {
                                 action = interaction.commandName + ' resume';
                             } else {
                                 action = interaction.commandName + ' ' + interaction.options.getSubcommand();
                             }
 
-                            updateGui(interaction, "pause", action, true);
+                            updateGui(action, true);
 
-                            if (action === 'music resume') {
+                            if (action === 'music play') {
+                                commandResponse(interaction, 'Playing ' + currQueue.currentTrack.title, 'https://static.toiimg.com/thumb/resizemode-4,width-1280,height-720,msid-58833617/58833617.jpg');
+                            } else if (action === 'music resume') {
                                 commandResponse(interaction, 'Music resuming', 'https://cdn.pixabay.com/photo/2018/06/30/09/29/monkey-3507317_1280.jpg');
                             } else if (action === 'music pause') {
                                 commandResponse(interaction, 'Music paused', 'https://cdn.openart.ai/stable_diffusion/186063089c7f244b162ad0015b6e54f8ad311548_2000x2000.webp');
@@ -114,7 +138,7 @@ module.exports = {
                             } else if (action === 'queue clear') {
                                 commandResponse(interaction, 'Queue cleared', 'https://live.staticflickr.com/2489/3863612958_b191130bb4_b.jpg');
                             } else if (action === 'music volume') {
-                                commandResponse(interaction, 'Volume set to ' + currQueue.node.volume/2, null);
+                                commandResponse(interaction, 'Volume set to ' + currQueue.node.volume/2, 'https://eventective-media.azureedge.net/389158.jpg');
                             }
 
                             buttonCollector.stop();
@@ -125,83 +149,56 @@ module.exports = {
                             if (i.customId === 'play') {
                                 currQueue.node.resume();
                                 await i.deferReply();
-                                //updateGui(i, "pause", 'music resume', true);
+                                //updateGui('music resume', true);
                                 buttonPressResponse(i, 'Music resuming', 'https://cdn.pixabay.com/photo/2018/06/30/09/29/monkey-3507317_1280.jpg');
                             } else if (i.customId === 'pause') {
                                 currQueue.node.pause();
                                 await i.deferReply();
-                                //updateGui(i, "play", 'music pause', true);
+                                //updateGui('music pause', true);
                                 buttonPressResponse(i, 'Music paused', 'https://cdn.openart.ai/stable_diffusion/186063089c7f244b162ad0015b6e54f8ad311548_2000x2000.webp');
                             } else if (i.customId === 'stop') {
-                                currQueue.node.stop();
+                                updateGui('music stop', true);
                                 await i.deferReply();
-                                updateGui(i, "play", 'music stop', true);
                                 buttonPressResponse(i, 'Music stopped', 'https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg');
+                                currQueue.node.stop();
                             } else if (i.customId === 'previous') {
                                 const history = useHistory(interaction.guildId);
                                 if (history.isEmpty()) {
                                     await i.deferReply();
                                     buttonPressResponse(i, 'No previous song', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY8tb0MddJY1oi1MZwOcmo_mzxtcgQPwL5aQ&usqp=CAU');
                                 } else {
-                                    history.previous();
+                                    await history.previous();
                                     await i.deferReply();
-                                    updateGui(i, "play", 'music back', true);
+                                    updateGui('music back', true);
                                     buttonPressResponse(i, 'Playing previous track: ' + history.currentTrack.title, null);
                                 }
                             } else if (i.customId === 'skip') {
-                                currQueue.node.skip();
-                                await i.deferReply();
-                                //updateGui(i, "play", 'music skip', true);
-                                buttonPressResponse(i, 'Track skipped', 'https://www.rd.com/wp-content/uploads/2020/12/GettyImages-78777891-scaled.jpg');
+                                if (currQueue.node.skip()) {
+                                    currQueue.node.resume();
+                                    await i.deferReply();
+                                    updateGui('music skip', true , true);
+                                    buttonPressResponse(i, 'Track skipped', 'https://www.rd.com/wp-content/uploads/2020/12/GettyImages-78777891-scaled.jpg');
+                                }
                             } else if (i.customId === 'clear') {
                                 currQueue.node.clear();
                                 await i.deferReply();
-                                updateGui(i, "play", 'queue clear', true);
+                                updateGui('queue clear', true);
                                 buttonPressResponse(i, 'Queue cleared', 'https://live.staticflickr.co/3863612958_b191130bb4_b.');
                             } else if (i.customId === 'volumeDown') {
                                 currQueue.node.setVolume(currQueue.node.volume - 20);
                                 await i.deferReply();
-                                updateGui(i, "play", 'volume down', true);
+                                updateGui('volume down', true);
                                 buttonPressResponse(i, 'Volume down to: ' + (currQueue.node.volume/2), 'https://static.angloinfo.com/blogs/files/sites/149/zich-een-aap-lachen.jpg');
                             } else if (i.customId === 'volumeUp') {
                                 currQueue.node.setVolume(currQueue.node.volume + 20);
                                 await i.deferReply();
-                                updateGui(i, "play", 'volume up', true);
+                                updateGui('volume up', true);
                                 buttonPressResponse(i, 'Volume up to: ' + (currQueue.node.volume/2), 'https://i.ytimg.com/vi/gvj5dmlc20I/hqdefault.jpg');
                             }
                         });
 
                         const player = useMainPlayer();
-
-
-                        player.events.on('playerSkip', async () => {
-                            console.log('SKIP EVENT HAS ACTIVATED');
-                        });
-
-                        /*
-                        player.events.on('disconnect', async () => {
-                            previousButton.setDisabled(true);
-                            pauseButton.setDisabled(true);
-                            stopButton.setDisabled(true);
-                            skipButton.setDisabled(true);
-
-                            volumeDown.setDisabled(true);
-                            clearButton.setDisabled(true);
-                            volumeUp.setDisabled(true);
-
-                            buttonCollector.stop();
-
-                            const firstRowPlay = new ActionRowBuilder().addComponents(previousButton, pauseButton, stopButton, skipButton);
-                            const secondRow = new ActionRowBuilder().addComponents(volumeDown, clearButton, volumeUp);
-
-                            await guiMessage.edit({
-                                components: [firstRowPlay, secondRow]
-                            });
-                        });
-                        */
-
                     }
-                    //
 
                 } else {
                     await command.execute(interaction);
@@ -217,85 +214,26 @@ module.exports = {
         }
     },
     updateGui,
-    currentInteraction
+    playerDisconnect
 }
 
-function createGui(interaction, currQueue, action, buttonEnabled) {
-    var trackNum = 1 + currQueue.size;
-    var trackTitles = currQueue.currentTrack.title;
-    var trackNumText = '1';
-    var addedByText = `<@${interaction.user.id}>`;
+function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButton) {
 
-    // Adds track names in queue to trackNames
-    if (trackNum !== 1) {
-        var queueTracks = currQueue.tracks.toArray();
+    const history = useHistory(interaction.guildId);
 
-        for (let i = 0; i < trackNum - 1; i++) {
-            trackTitles += '\n' + queueTracks[i].title;
-            trackNumText += '\n' + (i + 2);
-            addedByText += `\n<@${interaction.user.id}>`
-        }
-    }
+    var trackNum = currQueue.size + history.size;
+    var trackNumText;
 
-    var title;
+    var historyTracks = history.tracks.toArray();
+    var queueTracks = currQueue.tracks.toArray();
 
-    if (action === 'music play') {
-        title = ' ' + interaction.user.globalName + ' played - ' + currQueue.currentTrack.title + ' ';
-    } else if (action === 'music resume') {
-        title = ' ' + interaction.user.globalName + ' resumed - ' + currQueue.currentTrack.title + ' ';
-    } else if (action === 'music pause') {
-        title = ' ' + interaction.user.globalName + ' paused - ' + currQueue.currentTrack.title + ' ';
-    } else if (action === 'music skip') {
-        title = ' ' + interaction.user.globalName + ' skipped - ' + useHistory(interaction.guildId).currentTrack.title + ' ';
-    } else if (action === 'music back') {
-        title = ' ' + interaction.user.globalName + ' replaying - ' + currQueue.currentTrack.title + ' ';
-    }
-    else if (action === 'music stop') {
-        title = ' ' + interaction.user.globalName + ' stopped the player' + ' ';
-    } else if (action === 'queue add') {
-        title = ' ' + interaction.user.globalName + ' added - ' + currQueue.tracks.toArray()[currQueue.size - 1].title + ' to the queue ';
-    } else if (action === 'queue remove') {
-        title = ' ' + interaction.user.globalName + ' added - ' + 'INSERT REMOVED SONG HERE' + ' ';
-    } else if (action === 'queue clear') {
-        title = ' ' + interaction.user.globalName + ' cleared the queue ';
-    } else if (action === 'music volume') {
-        title = ' ' + interaction.user.globalName + ' set the volume to ' + (currQueue.node.volume/2);
-    } else if (action === 'volume down') {
-        title = ' ' + interaction.user.globalName + ' lowered the volume to ' + (currQueue.node.volume/2);
-    } else if (action === 'volume up') {
-        title = ' ' + interaction.user.globalName + ' increased the volume to ' + (currQueue.node.volume/2);
-    } else if (action === 'player next track') {
-        if (currQueue.size < 1) {
-            title = ' Player finished ';
-        } else {
-            title = ' Now playing - ' + currQueue.currentTrack.title + ' ';
-        }
-    }
+    var trackTitles = '';
+    var addedByText = '';
 
-    var spacing = '';
-    for (let i = 0; i < (43 - title.length); i++) {
-        spacing += '-';
-    }
+    if (action === 'music stop' || (action === 'player finish' && currQueue.isEmpty())) {
+        trackNumText = previousTrackNumText;
+        trackTitles = previousTrackTitles;
 
-    const trackEmbed = new EmbedBuilder()
-        .setColor(0x0099FF)
-        .setAuthor({ name: spacing + title + spacing + '\n💿 ' + currQueue.node.createProgressBar() , iconURL: interaction.member.displayAvatarURL() })
-        .addFields(
-            { name: '#', value: trackNumText, inline: true },
-            { name: 'Track Name', value: trackTitles, inline: true },
-            { name: 'Added By', value: addedByText, inline: true }
-        )
-
-    if (buttonEnabled) {
-        previousButton.setDisabled(false);
-        pauseButton.setDisabled(false);
-        stopButton.setDisabled(false);
-        skipButton.setDisabled(false);
-
-        volumeDown.setDisabled(false);
-        clearButton.setDisabled(false);
-        volumeUp.setDisabled(false);
-    } else {
         previousButton.setDisabled(true);
         pauseButton.setDisabled(true);
         stopButton.setDisabled(true);
@@ -304,7 +242,154 @@ function createGui(interaction, currQueue, action, buttonEnabled) {
         volumeDown.setDisabled(true);
         clearButton.setDisabled(true);
         volumeUp.setDisabled(true);
+    } else {
+        if (history.isEmpty()) {
+            trackNumText = '**1** ➤';
+        } else {
+            trackNumText = '1';
+        }
+    
+        for (let i = 1; i < trackNum + 1; i++) {
+            if (i === history.size) {
+                trackNumText += `\n**${(i + 1)}** ➤`;
+            } else {
+                trackNumText += '\n' + (i + 1);
+            }
+        }
+    
+        if (history.isEmpty()) {
+            trackTitles = `\n**${currQueue.currentTrack.title}**`;
+    
+            for (let i = 0; i < currQueue.size; i++) {
+                trackTitles += '\n' + queueTracks[i].title;
+            }
+        } else if (!history.isEmpty() && !currQueue.isEmpty()) {
+            for (let i = 0; i < history.size; i++) {
+                trackTitles += '\n' + historyTracks[i].title;
+            }
+    
+            trackTitles += `\n**${currQueue.currentTrack.title}**`;
+    
+            for (let i = 0; i < currQueue.size; i++) {
+                trackTitles += '\n' + queueTracks[i].title;
+            }
+        } else if (!history.isEmpty() && currQueue.isEmpty()) {
+            for (let i = 0; i < history.size; i++) {
+                trackTitles += '\n' + historyTracks[i].title;
+            }
+    
+            trackTitles += `\n**${currQueue.currentTrack.title}**`;
+        }
+
+        previousTrackNumText = trackNumText;
+        previousTrackTitles = trackTitles;
     }
+
+    if (action === 'music play' && !guiInit) {
+        addedByArray.push(`<@${interaction.user.id}>`);
+    } else if (action === 'music play' && guiInit) {
+        for (let i = addedByArray.length - 1; i > history.size; i--) {
+            addedByArray[i + 1] = addedByArray[i];
+        }
+        addedByArray[history.size + 1] = `<@${interaction.user.id}>`;
+    } else if (action === 'queue add') {
+        addedByArray.push(`<@${interaction.user.id}>`);
+    } else if (action === 'queue clear') {
+        var newArray = [];
+        for (let i = 0; i < history.size + 1; i++) {
+            newArray.push(addedByArray[i]);
+        }
+        addedByArray = newArray;
+    }
+
+    /*
+    if (action === 'music play' && guiInit) {
+        for (let i = addedByArray.length - 1; i > history.size; i--) {
+            addedByArray[i + 1] = addedByArray[i];
+        }
+        addedByArray[history.size + 1] = `<@${interaction.user.id}>`;
+    }
+    */
+
+    for (let i = 0; i < addedByArray.length; i++) {
+        addedByText += '\n' + addedByArray[i]
+    }
+
+    var title;
+
+    if (action === 'player start') {
+        title = 'Playing: ' + currQueue.currentTrack.title;
+    } else if (action === 'player finish') {
+        if (currQueue.tracks.toArray().length === 0) {
+            title = 'Player finished'
+        } else {
+            title = previousTitle;
+        }
+    } else if (currQueue.node.isPlaying() || forcePlayButton) {
+        title = ' Playing: ' + currQueue.currentTrack.title + ' ';
+    } else if (!currQueue.node.isPlaying()) {
+        title = ' Paused: ' + currQueue.currentTrack.title + ' ';
+    }
+
+    previousTitle = title;
+
+    var spacing = '';
+    var totalCharacters = 0;
+
+    if (title.length < 20) {
+        totalCharacters = 38;
+    } else if (title.length < 35) {
+        totalCharacters = 48;
+    } else {
+        totalCharacters = 58;
+    }
+
+    for (let i = 0; i < (totalCharacters - title.length); i++) {
+        spacing += '-';
+    }
+
+    if (action !== null) {
+        previousActionAvatar = interaction.member.displayAvatarURL();
+        if (action === 'music play' && !guiInit) {
+            previousActionFooter = 'Started the player';
+        } else if (action === 'music play' && guiInit) {
+            previousActionFooter = 'Played: ' + currQueue.currentTrack.title;
+        }else if (action === 'music resume') {
+            previousActionFooter = 'Resumed the player';
+        } else if (action === 'music pause') {
+            previousActionFooter = 'Paused the player'
+        } else if (action === 'music skip') {
+            previousActionFooter = 'Skipped: ' + useHistory(interaction.guildId).tracks.toArray()[0].title;
+        } else if (action === 'music back') {
+            previousActionFooter = 'Replayed: ' + currQueue.currentTrack.title;
+        }
+        else if (action === 'music stop') {
+            previousActionFooter = 'Stopped the player';
+        } else if (action === 'queue add') {
+            previousActionFooter = 'Added: ' + currQueue.tracks.toArray()[currQueue.size - 1].title + ' to the queue';
+        } else if (action === 'queue remove') {
+            //title = ' ' + interaction.user.globalName + ' removed - ' + 'INSERT REMOVED SONG HERE' + ' ';
+        } else if (action === 'queue clear') {
+            previousActionFooter = 'Cleared the queue';
+        } else if (action === 'music volume') {
+            previousActionFooter = 'Set the volume to ' + (currQueue.node.volume/2);
+        } else if (action === 'volume down') {
+            previousActionFooter = 'Lowered the volume to ' + (currQueue.node.volume/2);
+        } else if (action === 'volume up') {
+            previousActionFooter = 'Increased the volume to ' + (currQueue.node.volume/2);
+        }
+        guiInit = true;
+    }
+
+    const trackEmbed = new EmbedBuilder()
+    .setColor(0x0099FF)
+    .setAuthor({ name: spacing + title + spacing + '\n💿 ' + currQueue.node.createProgressBar() })
+    .addFields(
+        { name: '#', value: trackNumText, inline: true },
+        { name: 'Track Name', value: trackTitles, inline: true },
+        { name: 'Added By', value: addedByText, inline: true }
+    )
+    .setFooter({ text: previousActionFooter, iconURL: previousActionAvatar });
 
     const firstRowPlay = new ActionRowBuilder().addComponents(previousButton, playButton, stopButton, skipButton);
     const firstRowPause = new ActionRowBuilder().addComponents(previousButton, pauseButton, stopButton, skipButton);
@@ -313,26 +398,35 @@ function createGui(interaction, currQueue, action, buttonEnabled) {
     return [trackEmbed, firstRowPlay, firstRowPause, secondRow];
 }
 
-function updateGui(interaction, mainButton, action, buttonEnabled) {
-    const currQueue = useQueue(currentInteraction.guild.id);
-    var guiParts = createGui(currentInteraction, currQueue, action, buttonEnabled);
+function updateGui(action, buttonEnabled, forcePlayButton) {
+    if (guiInit) {
+        const currQueue = useQueue(currentInteraction.guild.id);
 
-    var trackEmbed = guiParts[0];
-    var firstRowPlay = guiParts[1];
-    var firstRowPause = guiParts[2];
-    var secondRow = guiParts[3];
+        var guiParts = createGui(currentInteraction, currQueue, action, buttonEnabled, forcePlayButton);
 
-    var firstRow;
-    var secondRow = new ActionRowBuilder().addComponents(volumeDown, clearButton, volumeUp);
-    
-    if (mainButton === 'pause') {
-        firstRow = firstRowPause;
-    } else {
-        firstRow = firstRowPlay;
+        var trackEmbed = guiParts[0];
+        var firstRowPlay = guiParts[1];
+        var firstRowPause = guiParts[2];
+        var secondRow = guiParts[3];
+
+        var firstRow;
+        var secondRow = new ActionRowBuilder().addComponents(volumeDown, clearButton, volumeUp);
+
+        if (currQueue.node.isPlaying() || forcePlayButton) {
+            firstRow = firstRowPause;
+        } else {
+            firstRow = firstRowPlay;
+        }
+
+        guiMessage.edit( {
+            embeds: [trackEmbed],
+            components: [firstRow, secondRow]
+        });
     }
+}
 
-    guiMessage.edit( {
-        embeds: [trackEmbed],
-        components: [firstRow, secondRow]
-    });
+function playerDisconnect() {
+    buttonCollector.stop();
+    guiInit = false;
+    addedByArray = [];
 }

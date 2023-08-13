@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { useMainPlayer } = require('discord-player');
+const { errorResponse } = require('../../utility/interaction-response');
 
 module.exports = {
     category: 'music',
@@ -20,32 +21,34 @@ module.exports = {
                 .setName('clear')
                 .setDescription('Clears queue')),
     async execute(interaction, queue) {
-        if (interaction.options.getSubcommand() === 'add') {
-            await interaction.deferReply();
+        if (interaction.member.voice.channel !== null) {
+            if (interaction.options.getSubcommand() === 'add') {
+                await interaction.deferReply();
 
-            const link = interaction.options.getString('link');
+                const link = interaction.options.getString('link');
 
-            const player = useMainPlayer();
-            const channel = interaction.member.voice.channel;
+                const player = useMainPlayer();
+                const channel = interaction.member.voice.channel;
 
-            try {
-                const { track } = await player.play(channel, link, {
-                    nodeOptions: {
-                        metadata: interaction
-                    }
-                });
-                
-                await interaction.editReply(`Added ${track.title} to queue!`);
-            } catch (e) {
-                await interaction.editReply(`Something went wrong: ${e}`);
+                try {
+                    const { track } = await player.play(channel, link, {
+                        nodeOptions: {
+                            metadata: interaction
+                        }
+                    });
+                } catch (e) {
+                    await interaction.editReply(`Something went wrong: ${e}`);
+                }
             }
-        }
-        else if (interaction.options.getSubcommand() === 'remove') {
-            await interaction.reply('todo remove track from queue')
-        }
-        else if (interaction.options.getSubcommand() === 'clear') {
-            queue.clear();
-            await interaction.reply('Tracks cleared from queue')
+            else if (interaction.options.getSubcommand() === 'remove') {
+                await interaction.reply('todo remove track from queue')
+            }
+            else if (interaction.options.getSubcommand() === 'clear') {
+                queue.clear();
+                await interaction.reply('Tracks cleared from queue')
+            }
+        } else {
+            await errorResponse(interaction, 'You must be in a channel to run music commands', 'https://external-preview.redd.it/Mf0VbcxbAKQWcOgwGyFGVOWf6ecES43hZum1zRLMdw4.jpg?width=640&crop=smart&auto=webp&s=fd486c949b72c1d568044907c6fb3b52571282ab');
         }
     },
 };

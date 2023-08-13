@@ -1,8 +1,8 @@
 const { updateGui } = require('../discord/interactionCreate');
 
 module.exports = {
-    name: "playerPause",
+    name: "playerStart",
     execute() {
-        updateGui('music pause', true);
+        updateGui('player start', true);
     }
 }
