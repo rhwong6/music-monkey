@@ -68,7 +68,7 @@ for (const file of playerEventFiles) {
 	const event = require(filePath);
 	
 	player.events.on(event.name, () => {
-		console.log("EVENT: " + event.name + " HAS FIRED");
+		//console.log("EVENT: " + event.name + " HAS FIRED");
 		event.execute()
 	});
 }

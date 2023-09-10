@@ -60,6 +60,7 @@ module.exports = {
     async execute(interaction, queue) {
         if (interaction.member.voice.channel !== null) {
             if (interaction.options.getSubcommand() === 'play') {
+
                 if (interaction.options.getString('song') !== null) {
                     const link = interaction.options.getString('song');
 
