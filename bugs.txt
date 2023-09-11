@@ -3,3 +3,9 @@
 •If user skips last track, does not display action
 •Commands shouldnt run when no player is active
 •History may be wrong
+•UpdateGui runs twice when user skips a last track as the playerFinish event runs (make it so that it checks if it is the last track and only run through playerFinish)
+ NOTE this might also be fine, as the non event one updates thea action footer
+ NOTE AGAIN problem currently is that the footer action is not updating because playerfinish event fires before the skip action event, not allowing the skip action event to run
+•Potential issue with stopping bot halfway through queue being unable to play a song when bot starts again (or maybe something needs to be an await) can also fix by checking if gui
+message variable is null
+•Skipping last song does not show in action footer

@@ -20,6 +20,8 @@ var previousTrackTitles;
 
 var addedByArray = [];
 
+var guildId;
+
 module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction) {
@@ -73,6 +75,9 @@ module.exports = {
             try {
                 if (command.category === "music") {
                     const queue = useQueue(interaction.guild.id);
+
+                    guildId = interaction.guild.id;
+
                     await command.execute(interaction, queue);
 
                     if (interaction.commandName === 'music' && interaction.options.getSubcommand() === 'stop') {
@@ -176,6 +181,7 @@ module.exports = {
                                 if (currQueue.node.skip()) {
                                     currQueue.node.resume();
                                     await i.deferReply();
+                                    console.log("SKIP BUTTON RUNS");
                                     updateGui('music skip', true , true);
                                     buttonPressResponse(i, 'Track skipped', 'https://www.rd.com/wp-content/uploads/2020/12/GettyImages-78777891-scaled.jpg');
                                 }
@@ -214,7 +220,8 @@ module.exports = {
         }
     },
     updateGui,
-    playerDisconnect
+    playerDisconnect,
+    getGuildId
 }
 
 function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButton) {
@@ -348,8 +355,11 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
         spacing += '-';
     }
 
+    console.log("ACTION: " + action);
+
     if (action !== null) {
         previousActionAvatar = interaction.member.displayAvatarURL();
+        console.log(interaction.member.user.globalName);
         if (action === 'music play' && !guiInit) {
             previousActionFooter = 'Started the player';
         } else if (action === 'music play' && guiInit) {
@@ -359,6 +369,7 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
         } else if (action === 'music pause') {
             previousActionFooter = 'Paused the player'
         } else if (action === 'music skip') {
+            console.log("SKIPPED TRACK: " + useHistory(interaction.guildId).tracks.toArray()[0].title);
             previousActionFooter = 'Skipped: ' + useHistory(interaction.guildId).tracks.toArray()[0].title;
         } else if (action === 'music back') {
             previousActionFooter = 'Replayed: ' + currQueue.currentTrack.title;
@@ -399,7 +410,12 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
 }
 
 function updateGui(action, buttonEnabled, forcePlayButton) {
+
+    console.log("UPDATEGUI RUNS");
+
     if (guiInit) {
+        console.log("THIS RUNS");
+
         const currQueue = useQueue(currentInteraction.guild.id);
 
         var guiParts = createGui(currentInteraction, currQueue, action, buttonEnabled, forcePlayButton);
@@ -429,4 +445,8 @@ function playerDisconnect() {
     buttonCollector.stop();
     guiInit = false;
     addedByArray = [];
+}
+
+function getGuildId() {
+    return guildId;
 }
