@@ -7,11 +7,8 @@ module.exports = {
     execute() {
         var currQueue = useQueue(getGuildId());
 
-        console.log("TEST");
-        //console.log(currQueue);
-
+        // If player finish event is run on the last song, updates gui for when player is complete
         if (currQueue.tracks.toArray().length === 0) {
-            console.log("PLAYERFINISH EVENT")
             updateGui('player finish', true, true);
         }
     }

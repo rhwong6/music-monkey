@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { useQueue, useMainPlayer, useHistory } = require('discord-player');
 const { commandResponse, errorResponse } = require('../../utility/interaction-response');
+const { updateGui } = require('../../events/discord/interactionCreate');
 
 /*
 const testEmbed = new EmbedBuilder()
@@ -24,6 +25,7 @@ const testEmbed = new EmbedBuilder()
 
 module.exports = {
     category: 'music',
+    // Uses slash command builder to set command name, description and options
     data: new SlashCommandBuilder()
         .setName('music')
         .setDescription('Plays music')
@@ -58,10 +60,15 @@ module.exports = {
                 .setName('info')
                 .setDescription('Info on current song')),
     async execute(interaction, queue) {
+
+        // Checks if user is currently in a voice channel, if not will send a reply informing them that they need to be in order to run music commands
         if (interaction.member.voice.channel !== null) {
             if (interaction.options.getSubcommand() === 'play') {
 
+                // If string option given. Otherwise, instead will resume the current song
                 if (interaction.options.getString('song') !== null) {
+
+                    // Extracts link from command options, and plays it, outputting an error if unable to
                     const link = interaction.options.getString('song');
 
                     const player = useMainPlayer();
@@ -96,26 +103,43 @@ module.exports = {
                 await interaction.deferReply();
             }
             else if (interaction.options.getSubcommand() === 'skip') {
-                queue.node.resume();
-                queue.node.skip();
-                await interaction.deferReply();
+                const currQueue = useQueue(interaction.guild.id);
+
+                // Stops the player if skipping the last song
+                if (currQueue.size === 0) {
+                    updateGui('music stop', true);
+                    queue.node.stop();
+                    await interaction.deferReply();
+                    commandResponse(interaction, 'Track skipped', 'https://www.rd.com/wp-content/uploads/2020/12/GettyImages-78777891-scaled.jpg');
+                } else {
+                    // Otherwise, skips current track
+                    queue.node.resume();
+                    queue.node.skip();
+                    await interaction.deferReply();
+                }
             } 
             else if (interaction.options.getSubcommand() === 'back') {
                 const history = useHistory(interaction.guildId);
 
+                // Responds with error message if no previous song in history
                 if (history.isEmpty()) {
                     errorResponse(interaction, 'No previous song', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY8tb0MddJY1oi1MZwOcmo_mzxtcgQPwL5aQ&usqp=CAU');
                 } else {
+                    // Otherwise, plays previous song
                     await history.previous();
                     await interaction.deferReply()
                     commandResponse(interaction, 'Playing previous track', 'https://www.rd.com/wp-content/uploads/2020/12/GettyImages-78777891-scaled.jpg');
                 }
             }
             else if (interaction.options.getSubcommand() === 'stop') {
-                queue.delete();
                 await interaction.deferReply();
+                commandResponse(interaction, 'Music stopped', 'https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg');
+                updateGui('music stop', true);
+                queue.node.stop();
             }
             else if (interaction.options.getSubcommand() === 'volume') {
+
+                // Sets volume (changed from 0 - 200 to 0 - 100 for users)
                 var volume = interaction.options.getNumber('amount');
 
                 if (volume > 100) {

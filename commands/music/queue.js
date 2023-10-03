@@ -4,6 +4,7 @@ const { errorResponse } = require('../../utility/interaction-response');
 
 module.exports = {
     category: 'music',
+    // Uses slash command builder to set command name, description and options
     data: new SlashCommandBuilder()
         .setName('queue')
         .setDescription('Actions to modify the music queue')
@@ -21,8 +22,12 @@ module.exports = {
                 .setName('clear')
                 .setDescription('Clears queue')),
     async execute(interaction, queue) {
+
+        // Checks if user is currently in a voice channel, if not will send a reply informing them that they need to be in order to run music commands
         if (interaction.member.voice.channel !== null) {
             if (interaction.options.getSubcommand() === 'add') {
+
+                // Adds song to the queue (or plays song if no songs currently in queue) NEED TO MAKE SURE A STRING IS PRESENT IN OPTIONS
                 await interaction.deferReply();
 
                 const link = interaction.options.getString('link');
@@ -41,7 +46,7 @@ module.exports = {
                 }
             }
             else if (interaction.options.getSubcommand() === 'remove') {
-                await interaction.reply('todo remove track from queue')
+                await interaction.reply('FEATURE NOT IMPLEMENTED YET SORRY')
             }
             else if (interaction.options.getSubcommand() === 'clear') {
                 queue.clear();

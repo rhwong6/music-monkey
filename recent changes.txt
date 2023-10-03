@@ -1,0 +1,10 @@
+Fixes:
+•Music stop command now disables gui
+•Fixed issue when error occurs when music skip button is used on the last song in the queue
+•Fixed issue when skip command is run on the last song, but the interaction is not responded to
+
+Features:
+•Clear queue button now usable
+
+Other:
+•Reduced spam console messages
