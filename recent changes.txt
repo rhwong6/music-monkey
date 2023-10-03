@@ -8,3 +8,4 @@ Features:
 
 Other:
 •Reduced spam console messages
+•GitHub now public https://github.com/rhwong6/music-monkey
