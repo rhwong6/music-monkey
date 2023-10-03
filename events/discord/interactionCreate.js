@@ -166,7 +166,7 @@ module.exports = {
                             } else if (i.customId === 'stop') {
                                 updateGui('music stop', true);
                                 await i.deferReply();
-                                buttonPressResponse(i, 'Music stopped', 'https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg');
+                                buttonPressResponse(i, 'Music stopped', 'https://www.carlverstraelen.com/WPAG016/wp-content/uploads/2016/08/carl_verstraelen_nature_wildlife_travel_photography_zambia-12-800x600.jpg');
                                 currQueue.node.stop();
                             } else if (i.customId === 'previous') {
                                 const history = useHistory(interaction.guildId);

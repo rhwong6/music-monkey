@@ -2,4 +2,4 @@ resume: https://cdn.pixabay.com/photo/2018/06/30/09/29/monkey-3507317_1280.jpg
 play: https://cdn.openart.ai/stable_diffusion/186063089c7f244b162ad0015b6e54f8ad311548_2000x2000.webp
 stop: https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg
 skip: https://www.rd.com/wp-content/uploads/2020/12/GettyImages-78777891-scaled.jpg
-stop: https://live.staticflickr.com/2489/3863612958_b191130bb4_b.jpg
+stop: https://www.carlverstraelen.com/WPAG016/wp-content/uploads/2016/08/carl_verstraelen_nature_wildlife_travel_photography_zambia-12-800x600.jpg

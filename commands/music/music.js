@@ -133,7 +133,7 @@ module.exports = {
             }
             else if (interaction.options.getSubcommand() === 'stop') {
                 await interaction.deferReply();
-                commandResponse(interaction, 'Music stopped', 'https://pbs.twimg.com/media/CqZvlC4WIAAbgQp.jpg');
+                commandResponse(interaction, 'Music stopped', 'https://www.carlverstraelen.com/WPAG016/wp-content/uploads/2016/08/carl_verstraelen_nature_wildlife_travel_photography_zambia-12-800x600.jpg');
                 updateGui('music stop', true);
                 queue.node.stop();
             }
