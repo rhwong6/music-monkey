@@ -75,7 +75,7 @@ module.exports = {
                     const channel = interaction.member.voice.channel;
 
                     await interaction.deferReply();
-
+                    
                     try {
                         const { track } = await player.play(channel, link, {
                             nodeOptions: {
