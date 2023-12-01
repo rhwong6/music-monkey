@@ -73,6 +73,14 @@ for (const file of playerEventFiles) {
 	});
 }
 
+client.on(Events.ShardError, error => {
+	console.error('A websocket connection encountered an error:', error);
+});
+
+process.on('unhandledRejection', error => {
+	console.error('Unhandled promise rejection:', error);
+});
+
 
 // Logs into discord with clients token
 client.login(TOKEN);

@@ -2,3 +2,4 @@ Fixes:
 •Updated packages, youtube playlists now play from links
 •Fixed bug where multiple gui updates occured when music was skipped
 •Fixed bug related to queue history and newest package version"
+•Switched to play-dl to avoid ECONNRESET error 
