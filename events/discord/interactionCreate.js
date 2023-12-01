@@ -283,7 +283,7 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
                 trackTitles += '\n' + queueTracks[i].title;
             }
         } else if (!history.isEmpty() && !currQueue.isEmpty()) {
-            for (let i = 0; i < history.size; i++) {
+            for (let i = history.size - 1; i >= 0; i--) {
                 trackTitles += '\n' + historyTracks[i].title;
             }
     
@@ -293,7 +293,7 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
                 trackTitles += '\n' + queueTracks[i].title;
             }
         } else if (!history.isEmpty() && currQueue.isEmpty()) {
-            for (let i = 0; i < history.size; i++) {
+            for (let i = history.size - 1; i >= 0; i--) {
                 trackTitles += '\n' + historyTracks[i].title;
             }
     
@@ -373,7 +373,6 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
         } else if (action === 'music pause') {
             previousActionFooter = 'Paused the player'
         } else if (action === 'music skip') {
-            console.log(useHistory(interaction.guildId).tracks)
             previousActionFooter = 'Skipped: ' + useHistory(interaction.guildId).tracks.toArray()[0].title;
         } else if (action === 'music back') {
             previousActionFooter = 'Replayed: ' + currQueue.currentTrack.title;
