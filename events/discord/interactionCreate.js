@@ -319,7 +319,6 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
                     trackTitles += '\n' + queueTracks[i].title;
                 }
                 
-                console.log('1: ' + trackTitles);
             } else if (!history.isEmpty() && !currQueue.isEmpty()) {
                 for (let i = history.size - 1; i >= 0; i--) {
                     trackTitles += '\n' + historyTracks[i].title;
@@ -331,7 +330,6 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
                     trackTitles += '\n' + queueTracks[i].title;
                 }
 
-                console.log('2: ' + trackTitles);
             } else if (!history.isEmpty() && currQueue.isEmpty()) {
                 for (let i = history.size - 1; i >= 0; i--) {
                     trackTitles += '\n' + historyTracks[i].title;
@@ -339,7 +337,6 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
         
                 trackTitles += `\n**${currQueue.currentTrack.title}**`;
 
-                console.log('3: ' + trackTitles);
             }
         }
 
