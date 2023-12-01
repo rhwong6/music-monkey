@@ -10,6 +10,8 @@ module.exports = {
         // If player finish event is run on the last song, updates gui for when player is complete
         if (currQueue.tracks.toArray().length === 0) {
             updateGui('player finish', true, true);
+        } else {
+            updateGui(null, true, true);
         }
     }
 }

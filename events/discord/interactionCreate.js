@@ -267,37 +267,80 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
             trackNumText = '1';
         }
         
-        for (let i = 1; i < trackNum + 1; i++) {
-            if (i === history.size) {
-                trackNumText += `\n**${(i + 1)}** ➤`;
-            } else {
-                trackNumText += '\n' + (i + 1);
+        if (action != null) {
+            for (let i = 1; i < trackNum + 1; i++) {
+                if (i === history.size) {
+                    trackNumText += `\n**${(i + 1)}** ➤`;
+                } else {
+                    trackNumText += '\n' + (i + 1);
+                }
+            }
+        } else {
+            for (let i = 1; i < trackNum; i++) {
+                if (i === history.size) {
+                    trackNumText += `\n**${(i + 1)}** ➤`;
+                } else {
+                    trackNumText += '\n' + (i + 1);
+                }
             }
         }
         
-        // Adds track titled depending on if there is tracks in the history or  current queue
-        if (history.isEmpty()) {
-            trackTitles = `\n**${currQueue.currentTrack.title}**`;
-    
-            for (let i = 0; i < currQueue.size; i++) {
-                trackTitles += '\n' + queueTracks[i].title;
+        if (action != null) {
+            // Adds track titled depending on if there is tracks in the history or  current queue
+            if (history.isEmpty()) {
+                trackTitles = `\n**${currQueue.currentTrack.title}**`;
+        
+                for (let i = 0; i < currQueue.size; i++) {
+                    trackTitles += '\n' + queueTracks[i].title;
+                }
+            } else if (!history.isEmpty() && !currQueue.isEmpty()) {
+                for (let i = history.size - 1; i >= 0; i--) {
+                    trackTitles += '\n' + historyTracks[i].title;
+                }
+        
+                trackTitles += `\n**${currQueue.currentTrack.title}**`;
+        
+                for (let i = 0; i < currQueue.size; i++) {
+                    trackTitles += '\n' + queueTracks[i].title;
+                }
+            } else if (!history.isEmpty() && currQueue.isEmpty()) {
+                for (let i = history.size - 1; i >= 0; i--) {
+                    trackTitles += '\n' + historyTracks[i].title;
+                }
+        
+                trackTitles += `\n**${currQueue.currentTrack.title}**`;
             }
-        } else if (!history.isEmpty() && !currQueue.isEmpty()) {
-            for (let i = history.size - 1; i >= 0; i--) {
-                trackTitles += '\n' + historyTracks[i].title;
+        } else {
+            // Adds track titled depending on if there is tracks in the history or  current queue
+            if (history.isEmpty()) {
+                trackTitles = `\n**${currQueue.currentTrack.title}**`;
+        
+                for (let i = 0; i < currQueue.size; i++) {
+                    trackTitles += '\n' + queueTracks[i].title;
+                }
+                
+                console.log('1: ' + trackTitles);
+            } else if (!history.isEmpty() && !currQueue.isEmpty()) {
+                for (let i = history.size - 1; i >= 0; i--) {
+                    trackTitles += '\n' + historyTracks[i].title;
+                }
+        
+                trackTitles += `\n**${queueTracks[0].title}**`;
+        
+                for (let i = 1; i < currQueue.size; i++) {
+                    trackTitles += '\n' + queueTracks[i].title;
+                }
+
+                console.log('2: ' + trackTitles);
+            } else if (!history.isEmpty() && currQueue.isEmpty()) {
+                for (let i = history.size - 1; i >= 0; i--) {
+                    trackTitles += '\n' + historyTracks[i].title;
+                }
+        
+                trackTitles += `\n**${currQueue.currentTrack.title}**`;
+
+                console.log('3: ' + trackTitles);
             }
-    
-            trackTitles += `\n**${currQueue.currentTrack.title}**`;
-    
-            for (let i = 0; i < currQueue.size; i++) {
-                trackTitles += '\n' + queueTracks[i].title;
-            }
-        } else if (!history.isEmpty() && currQueue.isEmpty()) {
-            for (let i = history.size - 1; i >= 0; i--) {
-                trackTitles += '\n' + historyTracks[i].title;
-            }
-    
-            trackTitles += `\n**${currQueue.currentTrack.title}**`;
         }
 
         previousTrackNumText = trackNumText;
