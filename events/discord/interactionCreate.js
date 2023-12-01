@@ -373,6 +373,7 @@ function createGui(interaction, currQueue, action, buttonEnabled, forcePlayButto
         } else if (action === 'music pause') {
             previousActionFooter = 'Paused the player'
         } else if (action === 'music skip') {
+            console.log(useHistory(interaction.guildId).tracks)
             previousActionFooter = 'Skipped: ' + useHistory(interaction.guildId).tracks.toArray()[0].title;
         } else if (action === 'music back') {
             previousActionFooter = 'Replayed: ' + currQueue.currentTrack.title;

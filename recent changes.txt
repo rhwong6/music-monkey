@@ -1,2 +1,3 @@
 Fixes:
 •Updated packages, youtube playlists now play from links
+•Fixed bug where multiple gui updates occured when music was skipped
